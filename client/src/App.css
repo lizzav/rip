@@ -1,0 +1,63 @@
+.App {
+  text-align: center;
+}
+.App-header {
+  background-color: #696969;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+input {
+  background-color: #696969;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+.task-item {
+  border: 1px solid #ffffff;
+  grid-template-columns: 30px 200px 400px 80px;
+  display: grid;
+}
+.task-item__checkbox {
+  height: 25px;
+  width: 25px;
+  margin: auto;
+}
+.task-item__txt {
+  margin: auto;
+  padding: 0;
+  text-align: center;
+  border-right: 1px solid #ffffff;
+  border-left: 1px solid #ffffff;
+  width: 100%;
+  height: 32px;
+}
+.newTask {
+  height: 130px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.newTask-container {
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.bin {
+  margin: auto;
+}
+button {
+  height: 32px;
+  margin-bottom: 10px;
+
+  font-size: calc(10px + 2vmin);
+}
