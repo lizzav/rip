@@ -1,9 +1,10 @@
 import "./App.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import bin from "./bin.png";
 import draw from "./draw.png";
 import save from "./save.png";
+import {Create, Delete, GetAll, Update} from "./http";
 
 function App() {
   const [name, setName] = useState("");
@@ -12,9 +13,15 @@ function App() {
   const [newDescription, setNewDescription] = useState("");
   const [addTask, setAddTask] = useState(false);
   const [editTask, setEditTask] = useState("");
+  const [update, setUpdate] = useState(false);
   const [tasks, setTask] = useState([
-    { id: 1, name: "name", description: "descr", isDone: false }
   ]);
+
+  useEffect(() => {
+    console.log(update);
+    GetAll().then(data => setTask(data));
+    setUpdate(false)
+  }, [update]);
   const handleChangeName = event => {
     setName(event.target.value);
   };
@@ -27,39 +34,33 @@ function App() {
   const handleChangeNewDescription = event => {
     setNewDescription(event.target.value);
   };
+
   const soldCheckbox = id => {
     const index = tasks.findIndex(el => el.id === id);
     const oldTask = tasks[index];
-    const newTask = { ...oldTask, isDone: !oldTask.isDone };
-    setTask([...tasks.slice(0, index), newTask, ...tasks.slice(index + 1)]);
+    Update({id:id,name:oldTask.name,description:oldTask.description,isDone:!oldTask.isDone}).then(data => setUpdate(true));
   };
+
   const deleteTask = id => {
-    const index = tasks.findIndex(el => el.id === id);
-    setTask([...tasks.slice(0, index), ...tasks.slice(index + 1)]);
+    Delete({id:id}).then(data =>  setUpdate(true));
   };
+
   const addNewTask = (name, description) => {
-    setTask([
-      ...tasks,
-      {
-        id: tasks[tasks.length - 1],
-        name: name,
-        description: description,
-        isDone: false
-      }
-    ]);
+    Create({ name: name, description: description, isDone:false }).then(data => setUpdate(true));
     setNewName("");
     setNewDescription("");
     setAddTask(false);
   };
+
   const updateTask = id => {
     const index = tasks.findIndex(el => el.id === id);
     const oldTask = tasks[index];
-    const newTask = { ...oldTask, name: name, description: description };
-    setTask([...tasks.slice(0, index), newTask, ...tasks.slice(index + 1)]);
+    Update({id:id,name:name,description:description,isDone:oldTask.isDone}).then(data => setUpdate(true));
     setEditTask("");
     setName("");
     setDescription("");
   };
+
   const editTaskParams = (id, name, description) => {
     setEditTask(id);
     setName(name);
@@ -129,7 +130,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              <div key={el.id}  className="task-item">
+              <div key={el.id} className="task-item">
                 <input
                   type="checkbox"
                   className="task-item__checkbox"
