@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
 import bin from "./bin.png";
 import draw from "./draw.png";
@@ -17,8 +17,14 @@ function App() {
   const [tasks, setTask] = useState([
   ]);
 
+
+  const [messages, setMessages] = useState([]);
+  const socket = useRef()
+  const [connected, setConnected] = useState(false);
+  const [username, setUsername] = useState('')
+
+
   useEffect(() => {
-    console.log(update);
     GetAll().then(data => setTask(data));
     setUpdate(false)
   }, [update]);
@@ -39,10 +45,12 @@ function App() {
     const index = tasks.findIndex(el => el.id === id);
     const oldTask = tasks[index];
     Update({id:id,name:oldTask.name,description:oldTask.description,isDone:!oldTask.isDone}).then(data => setUpdate(true));
+    sendUpdateTask()
   };
 
   const deleteTask = id => {
     Delete({id:id}).then(data =>  setUpdate(true));
+    sendDeleteTask()
   };
 
   const addNewTask = (name, description) => {
@@ -50,6 +58,7 @@ function App() {
     setNewName("");
     setNewDescription("");
     setAddTask(false);
+    sendTask();
   };
 
   const updateTask = id => {
@@ -59,6 +68,7 @@ function App() {
     setEditTask("");
     setName("");
     setDescription("");
+    sendUpdateTask()
   };
 
   const editTaskParams = (id, name, description) => {
@@ -67,8 +77,81 @@ function App() {
     setDescription(description);
   };
 
+
+  function connect() {
+    socket.current = new WebSocket('ws://localhost:5000')
+
+    socket.current.onopen = () => {
+      setConnected(true)
+      const message = {
+        event: 'connection',
+        username,
+        id: Date.now()
+      }
+      socket.current.send(JSON.stringify(message))
+    }
+    socket.current.onmessage = (event) => {
+      const message = JSON.parse(event.data)
+      setMessages(prev => [message, ...prev])
+      GetAll().then(data => setTask(data));
+    }
+    socket.current.onclose= () => {
+      console.log('Socket закрыт')
+    }
+    socket.current.onerror = () => {
+      console.log('Socket произошла ошибка')
+    }
+  }
+
+  const sendTask = async () => {
+    const message = {
+      username,
+      message: "добавил новую задачу",
+      id: Date.now(),
+      event: 'change'
+    }
+    socket.current.send(JSON.stringify(message));
+  }
+  const sendDeleteTask = async () => {
+    const message = {
+      username,
+      message: "удалил задачу",
+      id: Date.now(),
+      event: 'change'
+    }
+    socket.current.send(JSON.stringify(message));
+  }
+  const sendUpdateTask = async () => {
+    const message = {
+      username,
+      message: "обновил задачу",
+      id: Date.now(),
+      event: 'change'
+    }
+    socket.current.send(JSON.stringify(message));
+  }
+  if (!connected) {
+    return (
+
+      <div className="App">
+      <div className="center">
+        <div className="form">
+          <input
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            type="text"
+            placeholder="Введите ваше имя"/>
+          <button onClick={connect}>Войти</button>
+        </div>
+      </div>
+      </div>
+    )
+  }
+
+
   return (
     <div className="App">
+
       <header className="App-header">
         <div className="123">
           <div className="newTask">
@@ -168,6 +251,25 @@ function App() {
           )}
         </div>
       </header>
+      <div className="center">
+        <div>
+          <div className="messages">
+            {messages.map(mess =>
+              <div key={mess.id}>
+                {mess.event === 'connection'
+                  ? <div className="connection_message">
+                    Пользователь {mess.username} подключился
+                  </div>
+                  : <div className="message">
+                    {mess.username}. {mess.message}
+                  </div>
+                }
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
